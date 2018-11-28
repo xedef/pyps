@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-
 """
     pyps
     ~~~~
 
-    Python AWS SSM Parameter Store writer
+    Python AWS SSM Parameter Store updater
 """
 import json
 import os
@@ -164,7 +163,7 @@ def write(ssm, path, new_parameters):
     try:
         for index, chunk in enumerate(chunks):
             response = ssm.put_parameter(
-                Name='{}/part_{}'.format(path, index),
+                Name='{}/part_{}'.format(path, str(index).rjust(5, '0')),
                 Value=chunk,
                 Type='String'
             )
@@ -175,7 +174,6 @@ def write(ssm, path, new_parameters):
     return written
 
 def load_new_parameters(environment):
-    current_path = os.path.dirname(os.path.abspath(__file__))
     infile = './{}/{}.json'.format(PROJECT_FOLDER_NAME, environment)
     try:
         with open(infile, 'r') as file_handle:
@@ -184,6 +182,7 @@ def load_new_parameters(environment):
         fail_and_die('Could not parse input file "{}"\n{}'.format(infile, str(error)))
 
 def run():
+    print(ct('PyPS: Python AWS SSM Parameter Store updater\n', YELLOW))
     parser = argparse.ArgumentParser(description='Validates, minifies and escapes a JSON input.')
     parser.add_argument('--environment', '-e', required=True, type=str, choices=ENRIVONMENTS, help='Environment being updated')
     parser.add_argument('--project', '-p', required=True, type=str, nargs='?', help='Project that config is set to')
