@@ -181,17 +181,29 @@ def load_new_parameters(environment):
     except Exception as error:
         fail_and_die('Could not parse input file "{}"\n{}'.format(infile, str(error)))
 
+def show_and_quit(parameters, parameters_names):
+    project_found = len(parameters_names) > 0
+    if not project_found:
+        fail_and_die('Project was not found in SSM')
+
+    formatted = json.dumps(parameters, indent=2)
+    print(ct(formatted, CYAN))
+    exit()
+
 def run():
     print(ct('PyPS: Python AWS SSM Parameter Store updater\n', YELLOW))
     parser = argparse.ArgumentParser(description='Validates, minifies and escapes a JSON input.')
+    parser.add_argument('--show', '-s', action='store_true', help='Show remote configuration')
     parser.add_argument('--environment', '-e', required=True, type=str, choices=ENRIVONMENTS, help='Environment being updated')
     parser.add_argument('--project', '-p', required=True, type=str, nargs='?', help='Project that config is set to')
 
     args = parser.parse_args()
     environment = args.environment
+    show = args.show
     project_name = args.project.strip('/')
 
-    json_contents = load_new_parameters(environment)
+    if not show:
+        json_contents = load_new_parameters(environment)
 
     path = '/{}/{}'.format(environment, project_name)
 
@@ -199,6 +211,9 @@ def run():
 
     parameters, parameters_names = retrieve(ssm, path)
     project_found = len(parameters_names) > 0
+
+    if show:
+        show_and_quit(parameters, parameters_names)
 
     # if the project was not found, confirm that the user wants to add it as new
     message = 'Replace existing configuration? (y/N)'
