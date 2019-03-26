@@ -173,8 +173,13 @@ def write(ssm, path, new_parameters):
 
     return written
 
-def load_new_parameters(environment):
+def load_new_parameters(environment, file_path=None):
     infile = './{}/{}.json'.format(PROJECT_FOLDER_NAME, environment)
+    if file_path is not None:
+        file_path_message = 'Default config location "{}" overrided with custom path "{}". Proceed? (y/N)'.format(infile, file_path)
+        confirm_or_die(ct(file_path_message, YELLOW))
+        infile = file_path
+
     try:
         with open(infile, 'r') as file_handle:
             return json.load(file_handle)
@@ -196,14 +201,16 @@ def run():
     parser.add_argument('--show', '-s', action='store_true', help='Show remote configuration')
     parser.add_argument('--environment', '-e', required=True, type=str, choices=ENRIVONMENTS, help='Environment being updated')
     parser.add_argument('--project', '-p', required=True, type=str, nargs='?', help='Project that config is set to')
+    parser.add_argument('--file', '-f', required=False, type=str, nargs='?', help='Optional file path to take the config from')
 
     args = parser.parse_args()
     environment = args.environment
+    file_path = args.file or None
     show = args.show
     project_name = args.project.strip('/')
 
     if not show:
-        json_contents = load_new_parameters(environment)
+        json_contents = load_new_parameters(environment, file_path)
 
     path = '/{}/{}'.format(environment, project_name)
 
